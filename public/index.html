@@ -118,8 +118,6 @@
         #stats { margin-top: 20px; font-size: 15px; color: #aaa; }
         .score { color: #55ff55; font-weight: bold; }
         .hint { font-size: 12px; color: #777; margin-top: 5px; }
-
-        /* Lock Interface Start Overlay */
         #start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -141,65 +139,55 @@
             font-family: monospace;
             cursor: pointer;
             border-radius: 4px;
-            box-shadow: 0 4px 10px rgba(85,255,85,0.4);
         }
         #start-btn:hover { background: #33cc33; }
     </style>
 </head>
 <body>
-
 <div id="game-container">
-    <!-- Click activation wall to bypass browser hardware restrictions -->
     <div id="start-overlay">
         <h3 style="color: #ffaa00; margin-bottom: 20px;">CRYSTAL PVP TRAINER</h3>
         <button id="start-btn" onclick="startGame()">START PRACTICE</button>
     </div>
-
     <h2>Crystal PvP Practice</h2>
     <div id="prompt-box">SWITCH TO: <span id="target-item" style="color: #ff55ff;">NETHERITE SWORD</span></div>
-    
     <div id="hud-row">
         <div id="hotbar" class="mc-grid">
-            <div class="slot active-slot" id="s1" data-slot="1"><span class="slot-bind">CAPS</span><span class="slot-item">Sword</span></div>
-            <div class="slot" id="s2" data-slot="2"><span class="slot-bind">2</span><span class="slot-item">Pearls</span></div>
-            <div class="slot" id="s3" data-slot="3"><span class="slot-bind">3</span><span class="slot-item">Glowstone</span></div>
-            <div class="slot" id="s4" data-slot="4"><span class="slot-bind">4</span><span class="slot-item">Gapples</span></div>
-            <div class="slot" id="s5" data-slot="5"><span class="slot-bind">R</span><span class="slot-item">Anchors</span></div>
-            <div class="slot" id="s6" data-slot="6"><span class="slot-bind">ALT</span><span class="slot-item">Totem</span></div>
-            <div class="slot" id="s7" data-slot="7"><span class="slot-bind">X</span><span class="slot-item">Obsidian</span></div>
-            <div class="slot" id="s8" data-slot="8"><span class="slot-bind">C</span><span class="slot-item">Crystals</span></div>
-            <div class="slot" id="s9" data-slot="9"><span class="slot-bind">V</span><span class="slot-item">Pickaxe</span></div>
+            <div class="slot active-slot" id="s1"><span class="slot-bind">CAPS</span><span class="slot-item">Sword</span></div>
+            <div class="slot" id="s2"><span class="slot-bind">2</span><span class="slot-item">Pearls</span></div>
+            <div class="slot" id="s3"><span class="slot-bind">3</span><span class="slot-item">Glowstone</span></div>
+            <div class="slot" id="s4"><span class="slot-bind">4</span><span class="slot-item">Gapples</span></div>
+            <div class="slot" id="s5"><span class="slot-bind">R</span><span class="slot-item">Anchors</span></div>
+            <div class="slot" id="s6"><span class="slot-bind">ALT</span><span class="slot-item">Totem</span></div>
+            <div class="slot" id="s7"><span class="slot-bind">X</span><span class="slot-item">Obsidian</span></div>
+            <div class="slot" id="s8"><span class="slot-bind">C</span><span class="slot-item">Crystals</span></div>
+            <div class="slot" id="s9"><span class="slot-bind">V</span><span class="slot-item">Pickaxe</span></div>
         </div>
-
         <div id="offhand-container">
             <span style="font-size: 10px; color:#888; margin-bottom:2px;">OFFHAND</span>
             <div class="slot" id="hud-offhand" style="border: 3px solid #ff5555;"><span class="slot-bind">Q</span><span class="slot-item">Empty</span></div>
         </div>
     </div>
-
     <div id="inventory-screen">
         <div class="inv-title">Inventory (Press E to Close)</div>
         <div id="main-inventory" class="mc-grid"></div>
         <div class="inv-title">Hotbar</div>
         <div id="inv-hotbar-mirror" class="mc-grid" style="grid-template-columns: repeat(9, 1fr);"></div>
     </div>
-
     <div id="stats">Score: <span id="score-val" class="score">0</span> | Streak: <span id="streak-val" class="score">0</span></div>
     <div class="hint">Press [E] to toggle inventory. Drag items to rearrange them!</div>
 </div>
-
 <script>
     const hotbarConfig = {
-        'CapsLock':  { id: 's1', name: 'NETHERITE SWORD', defaultItem: 'Sword' },
-        'Digit2':    { id: 's2', name: 'ENDER PEARLS', defaultItem: 'Pearls' },
-        'Digit3':    { id: 's3', name: 'GLOWSTONE', defaultItem: 'Glowstone' },
-        'Digit4':    { id: 's4', name: 'GOLDEN APPLES', defaultItem: 'Gapples' },
-        'KeyR':      { id: 's5', name: 'RESPAWN ANCHORS', defaultItem: 'Anchors' },
-        'AltLeft':   { id: 's6', name: 'TOTEM', defaultItem: 'Totem' },
-        'AltRight':  { id: 's6', name: 'TOTEM', defaultItem: 'Totem' },
-        'KeyX':      { id: 's7', name: 'OBSIDIAN', defaultItem: 'Obsidian' },
-        'KeyC':      { id: 's8', name: 'CRYSTALS', defaultItem: 'Crystals' },
-        'KeyV':      { id: 's9', name: 'PICKAXE', defaultItem: 'Pickaxe' }
+        'capslock': { id: 's1', name: 'NETHERITE SWORD', defaultItem: 'Sword' },
+        '2':        { id: 's2', name: 'ENDER PEARLS', defaultItem: 'Pearls' },
+        '3':        { id: 's3', name: 'GLOWSTONE', defaultItem: 'Glowstone' },
+        '4':        { id: 's4', name: 'GOLDEN APPLES', defaultItem: 'Gapples' },
+        'r':        { id: 's5', name: 'RESPAWN ANCHORS', defaultItem: 'Anchors' },
+        'alt':      { id: 's6', name: 'TOTEM', defaultItem: 'Totem' },
+        'x':        { id: 's7', name: 'OBSIDIAN', defaultItem: 'Obsidian' },
+        'c':        { id: 's8', name: 'CRYSTALS', defaultItem: 'Crystals' },
+        'v':        { id: 's9', name: 'PICKAXE', defaultItem: 'Pickaxe' }
     };
 
     let offhandItem = "Empty";
@@ -223,14 +211,13 @@
         mainInv.appendChild(slot);
     }
 
-    Object.keys(hotbarConfig).forEach((code) => {
-        if(code === 'AltRight') return;
-        const conf = hotbarConfig[code];
+    Object.keys(hotbarConfig).forEach((key) => {
+        const conf = hotbarConfig[key];
         const mirrorSlot = document.createElement('div');
         mirrorSlot.className = 'slot';
         mirrorSlot.setAttribute('draggable', 'true');
         mirrorSlot.dataset.type = 'hotbar';
-        mirrorSlot.dataset.key = code;
+        mirrorSlot.dataset.key = key;
         mirrorSlot.innerHTML = `<span class="slot-bind">${conf.id.replace('s','')}</span><span class="slot-item">${conf.defaultItem}</span>`;
         mirrorHotbar.appendChild(mirrorSlot);
     });
@@ -242,3 +229,100 @@
         do {
             next = pvpPool[Math.floor(Math.random() * pvpPool.length)];
         } while (next === currentTarget);
+        currentTarget = next;
+        document.getElementById('target-item').innerText = currentTarget;
+        document.getElementById('target-item').style.color = currentTarget === 'OFFHAND TOTEM' ? "#55ffff" : "#ff55ff";
+    }
+
+    function startGame() {
+        document.getElementById('start-overlay').style.display = 'none';
+        nextPrompt();
+    }
+
+    window.addEventListener('keydown', function(e) {
+        let keyName = e.key.toLowerCase(); 
+        
+        if(['r','c','x','v','q','e','2','3','4','alt','capslock'].includes(keyName)) {
+            e.preventDefault();
+        }
+
+        if (keyName === 'e') {
+            isInventoryOpen = !isInventoryOpen;
+            document.getElementById('inventory-screen').style.display = isInventoryOpen ? 'flex' : 'none';
+            return;
+        }
+
+        if (isInventoryOpen) return;
+
+        if (keyName === 'q') {
+            const activeSlotEl = document.querySelector('#hotbar .active-slot');
+            const activeItemText = activeSlotEl.querySelector('.slot-item').innerText;
+            
+            let oldOffhand = offhandItem;
+            offhandItem = activeItemText;
+            activeSlotEl.querySelector('.slot-item').innerText = oldOffhand;
+            document.querySelector('#hud-offhand .slot-item').innerText = offhandItem;
+
+            if (currentTarget === 'OFFHAND TOTEM' && offhandItem.toUpperCase() === 'TOTEM') {
+                score++; streak++;
+                nextPrompt();
+            }
+            updateStats();
+            return;
+        }
+
+        if (hotbarConfig[keyName]) {
+            document.querySelectorAll('#hotbar .slot').forEach(s => s.classList.remove('active-slot'));
+            
+            const selectedConfig = hotbarConfig[keyName];
+            const hudSlot = document.getElementById(selectedConfig.id);
+            hudSlot.classList.add('active-slot');
+
+            const currentItemInSlot = hudSlot.querySelector('.slot-item').innerText.toUpperCase();
+
+            if (currentTarget !== 'OFFHAND TOTEM' && currentTarget.includes(currentItemInSlot) && currentItemInSlot !== "EMPTY") {
+                score++; streak++;
+                nextPrompt();
+            } else {
+                streak = 0; 
+            }
+            updateStats();
+        }
+    });
+
+    function updateStats() {
+        document.getElementById('score-val').innerText = score;
+        document.getElementById('streak-val').innerText = streak;
+    }
+
+    document.addEventListener('dragstart', function(e) {
+        if (e.target.classList.contains('slot')) {
+            draggedElement = e.target;
+            e.dataTransfer.setData('text/plain', e.target.innerHTML);
+        }
+    });
+
+    document.addEventListener('dragover', function(e) { e.preventDefault(); });
+
+    document.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const dropTarget = e.target.closest('.slot');
+        if (dropTarget && draggedElement && dropTarget !== draggedElement) {
+            let draggedItemText = draggedElement.querySelector('.slot-item')?.innerText || "Empty";
+            let targetItemText = dropTarget.querySelector('.slot-item')?.innerText || "Empty";
+            
+            if(draggedElement.dataset.type === 'hotbar') {
+                hotbarConfig[draggedElement.dataset.key].defaultItem = targetItemText;
+                document.getElementById(hotbarConfig[draggedElement.dataset.key].id).querySelector('.slot-item').innerText = targetItemText;
+            }
+            if(dropTarget.dataset.type === 'hotbar') {
+                hotbarConfig[dropTarget.dataset.key].defaultItem = draggedItemText;
+                document.getElementById(hotbarConfig[dropTarget.dataset.key].id).querySelector('.slot-item').innerText = draggedItemText;
+            }
+            draggedElement.querySelector('.slot-item').innerText = targetItemText;
+            dropTarget.querySelector('.slot-item').innerText = draggedItemText;
+        }
+    });
+</script>
+</body>
+</html>
