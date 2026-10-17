@@ -29,7 +29,7 @@
         }
         h2 { color: #ff55ff; margin: 0 0 10px 0; text-transform: uppercase; font-size: 22px; letter-spacing: 1px; }
         #prompt-box {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             margin: 15px 0;
             padding: 12px;
@@ -150,18 +150,18 @@
         <button id="start-btn" onclick="startGame()">START PRACTICE</button>
     </div>
     <h2>Crystal PvP Practice</h2>
-    <div id="prompt-box">SWITCH TO: <span id="target-item" style="color: #ff55ff;">NETHERITE SWORD</span></div>
+    <div id="prompt-box">SWITCH TO SLOT: <span id="target-item" style="color: #ffaa00;">1</span></div>
     <div id="hud-row">
         <div id="hotbar" class="mc-grid">
-            <div class="slot active-slot" id="s1"><span class="slot-bind">CAPS</span><span class="slot-item">Sword</span></div>
-            <div class="slot" id="s2"><span class="slot-bind">2</span><span class="slot-item">Pearls</span></div>
-            <div class="slot" id="s3"><span class="slot-bind">3</span><span class="slot-item">Glowstone</span></div>
-            <div class="slot" id="s4"><span class="slot-bind">4</span><span class="slot-item">Gapples</span></div>
-            <div class="slot" id="s5"><span class="slot-bind">R</span><span class="slot-item">Anchors</span></div>
-            <div class="slot" id="s6"><span class="slot-bind">ALT</span><span class="slot-item">Totem</span></div>
-            <div class="slot" id="s7"><span class="slot-bind">X</span><span class="slot-item">Obsidian</span></div>
-            <div class="slot" id="s8"><span class="slot-bind">C</span><span class="slot-item">Crystals</span></div>
-            <div class="slot" id="s9"><span class="slot-bind">V</span><span class="slot-item">Pickaxe</span></div>
+            <div class="slot active-slot" id="s1" data-slot-num="1"><span class="slot-bind">CAPS</span><span class="slot-item">Sword</span></div>
+            <div class="slot" id="s2" data-slot-num="2"><span class="slot-bind">2</span><span class="slot-item">Pearls</span></div>
+            <div class="slot" id="s3" data-slot-num="3"><span class="slot-bind">3</span><span class="slot-item">Glowstone</span></div>
+            <div class="slot" id="s4" data-slot="4"><span class="slot-bind">4</span><span class="slot-item">Gapples</span></div>
+            <div class="slot" id="s5" data-slot="5"><span class="slot-bind">R</span><span class="slot-item">Anchors</span></div>
+            <div class="slot" id="s6" data-slot="6"><span class="slot-bind">ALT</span><span class="slot-item">Totem</span></div>
+            <div class="slot" id="s7" data-slot="7"><span class="slot-bind">X</span><span class="slot-item">Obsidian</span></div>
+            <div class="slot" id="s8" data-slot="8"><span class="slot-bind">C</span><span class="slot-item">Crystals</span></div>
+            <div class="slot" id="s9" data-slot="9"><span class="slot-bind">V</span><span class="slot-item">Pickaxe</span></div>
         </div>
         <div id="offhand-container">
             <span style="font-size: 10px; color:#888; margin-bottom:2px;">OFFHAND</span>
@@ -178,16 +178,17 @@
     <div class="hint">Press [E] to toggle inventory. Drag items to rearrange them!</div>
 </div>
 <script>
+    // Universal character keys mapped to slot number tags
     const hotbarConfig = {
-        'capslock': { id: 's1', name: 'NETHERITE SWORD', defaultItem: 'Sword' },
-        '2':        { id: 's2', name: 'ENDER PEARLS', defaultItem: 'Pearls' },
-        '3':        { id: 's3', name: 'GLOWSTONE', defaultItem: 'Glowstone' },
-        '4':        { id: 's4', name: 'GOLDEN APPLES', defaultItem: 'Gapples' },
-        'r':        { id: 's5', name: 'RESPAWN ANCHORS', defaultItem: 'Anchors' },
-        'alt':      { id: 's6', name: 'TOTEM', defaultItem: 'Totem' },
-        'x':        { id: 's7', name: 'OBSIDIAN', defaultItem: 'Obsidian' },
-        'c':        { id: 's8', name: 'CRYSTALS', defaultItem: 'Crystals' },
-        'v':        { id: 's9', name: 'PICKAXE', defaultItem: 'Pickaxe' }
+        'capslock': { id: 's1', slotNum: '1', defaultItem: 'Sword' },
+        '2':        { id: 's2', slotNum: '2', defaultItem: 'Pearls' },
+        '3':        { id: 's3', slotNum: '3', defaultItem: 'Glowstone' },
+        '4':        { id: 's4', slotNum: '4', defaultItem: 'Gapples' },
+        'r':        { id: 's5', slotNum: '5', defaultItem: 'Anchors' },
+        'alt':      { id: 's6', slotNum: '6', defaultItem: 'Totem' },
+        'x':        { id: 's7', slotNum: '7', defaultItem: 'Obsidian' },
+        'c':        { id: 's8', slotNum: '8', defaultItem: 'Crystals' },
+        'v':        { id: 's9', slotNum: '9', defaultItem: 'Pickaxe' }
     };
 
     let offhandItem = "Empty";
@@ -196,15 +197,12 @@
     let isInventoryOpen = false;
     let currentTarget = null;
     let draggedElement = null;
-    let hoveredSlot = null; // Track current hovered slot block for hotkey mapping
+    let hoveredSlot = null;
 
     const mainInv = document.getElementById('main-inventory');
     const mirrorHotbar = document.getElementById('inv-hotbar-mirror');
-    
-    // Fill full inventory grid with custom PvP junk mixed heavily with Totems
     const extraItems = ['Totem', 'Crystals', 'Totem', 'Anchors', 'Glowstone', 'Totem', 'Obsidian', 'Potions', 'Totem', 'Pearls', 'Totem'];
     
-    // Fixed: Loop from index 0 to exactly 26 to render all 27 containers cleanly
     for (let i = 0; i < 27; i++) {
         const slot = document.createElement('div');
         slot.className = 'slot';
@@ -224,17 +222,17 @@
         mirrorSlot.setAttribute('draggable', 'true');
         mirrorSlot.dataset.type = 'hotbar';
         mirrorSlot.dataset.key = key;
-        mirrorSlot.innerHTML = `<span class="slot-bind">${conf.id.replace('s','')}</span><span class="slot-item">${conf.defaultItem}</span>`;
+        mirrorSlot.innerHTML = `<span class="slot-bind">${conf.slotNum}</span><span class="slot-item">${conf.defaultItem}</span>`;
         mirrorHotbar.appendChild(mirrorSlot);
     });
 
-    // Removed the Offhand Totem loop restriction entirely
-    const pvpPool = ['NETHERITE SWORD', 'ENDER PEARLS', 'GLOWSTONE', 'GOLDEN APPLES', 'RESPAWN ANCHORS', 'TOTEM', 'OBSIDIAN', 'CRYSTALS', 'PICKAXE'];
+    // Pure hotbar numeric targets array
+    const slotPool = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
     
     function nextPrompt() {
         let next;
         do {
-            next = pvpPool[Math.floor(Math.random() * pvpPool.length)];
+            next = slotPool[Math.floor(Math.random() * slotPool.length)];
         } while (next === currentTarget);
         currentTarget = next;
         document.getElementById('target-item').innerText = currentTarget;
@@ -245,7 +243,6 @@
         nextPrompt();
     }
 
-    // Monitor current hover targets for inventory offhand binds
     document.addEventListener('mouseover', function(e) {
         let slot = e.target.closest('.slot');
         if (slot) hoveredSlot = slot;
@@ -268,23 +265,19 @@
             return;
         }
 
-        // Expanded: Q key offhand management operates inside or outside inventory
         if (keyName === 'q') {
             if (isInventoryOpen && hoveredSlot) {
-                // If inventory panel is open, swap hovered item straight with offhand hud slot
                 let targetText = hoveredSlot.querySelector('.slot-item').innerText;
                 let oldOffhand = offhandItem;
                 offhandItem = targetText;
                 hoveredSlot.querySelector('.slot-item').innerText = oldOffhand;
                 document.querySelector('#hud-offhand .slot-item').innerText = offhandItem;
                 
-                // If moving item inside hotbar mirror, update base system configurations
                 if (hoveredSlot.dataset.type === 'hotbar') {
                     hotbarConfig[hoveredSlot.dataset.key].defaultItem = oldOffhand;
                     document.getElementById(hotbarConfig[hoveredSlot.dataset.key].id).querySelector('.slot-item').innerText = oldOffhand;
                 }
             } else if (!isInventoryOpen) {
-                // Normal HUD swap routine outside container menus
                 const activeSlotEl = document.querySelector('#hotbar .active-slot');
                 const activeItemText = activeSlotEl.querySelector('.slot-item').innerText;
                 
@@ -298,6 +291,7 @@
 
         if (isInventoryOpen) return;
 
+        // Number prompt tracking logic
         if (hotbarConfig[keyName]) {
             document.querySelectorAll('#hotbar .slot').forEach(s => s.classList.remove('active-slot'));
             
@@ -305,13 +299,8 @@
             const hudSlot = document.getElementById(selectedConfig.id);
             hudSlot.classList.add('active-slot');
 
-            const currentItemInSlot = hudSlot.querySelector('.slot-item').innerText.toUpperCase();
-
-            // FIXED: Direct text evaluations prevent double-word items like gapples from failing matching scripts
-            let normalizedTarget = currentTarget.replace('NETHERITE ', '').replace('ENDER ', '').replace('GOLDEN ', '').replace('RESPAWN ', '');
-            let normalizedCurrent = currentItemInSlot.replace('SWORD', 'SWORD').replace('PEARLS', 'PEARLS').replace('GAPPLES', 'APPLES').replace('ANCHORS', 'ANCHORS');
-
-            if (normalizedTarget === normalizedCurrent && currentItemInSlot !== "EMPTY") {
+            // Directly check if pressed key matches slot number prompt target
+            if (selectedConfig.slotNum === currentTarget) {
                 score++; streak++;
                 nextPrompt();
             } else {
