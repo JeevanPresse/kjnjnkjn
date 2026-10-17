@@ -2,162 +2,246 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Crystal PvP Bind & Inventory Trainer</title>
     <style>
         body {
-            background-color: #1a1a1a;
+            background-color: #141414;
             color: #ffffff;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 95vh;
+            height: 98vh;
             margin: 0;
             overflow: hidden;
             user-select: none;
         }
         #game-container {
             text-align: center;
-            background: #2c2c2c;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.5);
-            border: 4px solid #4a4a4a;
+            background: #222222;
+            padding: 25px;
+            border-radius: 6px;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.7);
+            border: 4px solid #3c3c3c;
+            position: relative;
+            width: 580px;
         }
-        h2 { color: #55ff55; margin-top: 0; text-transform: uppercase; }
+        h2 { color: #ff55ff; margin: 0 0 10px 0; text-transform: uppercase; font-size: 22px; letter-spacing: 1px; }
         #prompt-box {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            margin: 20px 0;
-            padding: 15px;
-            background: #111;
-            border-radius: 5px;
-            border-left: 5px solid #ff5555;
-            min-height: 35px;
+            margin: 15px 0;
+            padding: 12px;
+            background: #0a0a0a;
+            border-radius: 4px;
+            border-left: 5px solid #ffaa00;
+            min-height: 28px;
         }
-        #hotbar {
-            display: flex;
-            gap: 4px;
+        
+        /* Minecraft UI Styling */
+        .mc-grid {
+            display: grid;
             background: #8f8f8f;
             padding: 4px;
-            border: 4px solid #3c3c3c;
-            margin-top: 25px;
+            border-top: 4px solid #fff;
+            border-left: 4px solid #fff;
+            border-bottom: 4px solid #373737;
+            border-right: 4px solid #373737;
+            gap: 4px;
+            user-select: none;
         }
+        
+        #inventory-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: #c6c6c6;
+            padding: 15px;
+            border: 4px solid #3c3c3c;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        .inv-title { color: #404040; font-weight: bold; margin-bottom: 8px; font-size: 14px; text-align: left; width: 100%; }
+        #main-inventory { grid-template-columns: repeat(9, 1fr); margin-bottom: 15px; }
+        
+        #hud-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 20px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        #hotbar { grid-template-columns: repeat(9, 1fr); }
+        
         .slot {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             background: #8b8b8b;
-            border: 3px solid #373737;
+            border-top: 3px solid #373737;
+            border-left: 3px solid #373737;
+            border-bottom: 3px solid #fff;
+            border-right: 3px solid #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            padding: 2px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #fff;
+            justify-content: center;
             position: relative;
+            cursor: pointer;
         }
-        .slot-bind { color: #ffaa00; font-size: 12px; }
-        .slot-item { font-size: 10px; color: #fff; text-align: center; margin-bottom: 5px;}
+        .slot:hover { background: #9c9c9c; }
+        
         .active-slot {
             border: 3px solid #ffffff !important;
             background: #afafaf;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.5);
         }
-        #stats {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #aaa;
+        
+        .slot-bind {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            color: #dddddd;
+            font-size: 10px;
+            font-family: sans-serif;
+            text-shadow: 1px 1px 1px #000;
         }
-        .score { color: #55ffff; font-weight: bold; }
+        
+        .slot-item {
+            font-size: 10px;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 1px 1px 2px #000;
+            word-break: break-word;
+            line-height: 11px;
+            padding: 0 2px;
+            pointer-events: none; /* Let drag events pass through to slot */
+        }
+        
+        /* Offhand Specific Styling */
+        #offhand-container { display: flex; flex-direction: column; align-items: center; }
+        #offhand-slot { border: 3px solid #4a4a4a; }
+
+        #stats { margin-top: 20px; font-size: 15px; color: #aaa; }
+        .score { color: #55ff55; font-weight: bold; }
+        .hint { font-size: 12px; color: #777; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <h2>Minecraft Bind Practice</h2>
-    <p style="color: #aaa; font-size: 13px;">Click inside this window first, then react to the prompt!</p>
+    <h2>Crystal PvP Practice</h2>
+    <div id="prompt-box">SWITCH TO: <span id="target-item" style="color: #ff55ff;">NETHERITE SWORD</span></div>
     
-    <div id="prompt-box">Press Key for: <span id="target-item" style="color: #ff5555;">SWORD</span></div>
-    
-    <div id="hotbar">
-        <!-- 9 standard Minecraft slots with common custom binds -->
-        <div class="slot active-slot" id="s1"><span class="slot-bind">1</span><span class="slot-item">Sword</span></div>
-        <div class="slot" id="s2"><span class="slot-bind">2</span><span class="slot-item">Gapple</span></div>
-        <div class="slot" id="s3"><span class="slot-bind">3</span><span class="slot-item">Pick</span></div>
-        <div class="slot" id="s4"><span class="slot-bind">4</span><span class="slot-item">Blocks</span></div>
-        <div class="slot" id="s5"><span class="slot-bind">R</span><span class="slot-item">Bucket</span></div>
-        <div class="slot" id="s6"><span class="slot-bind">F</span><span class="slot-item">Pearl</span></div>
-        <div class="slot" id="s7"><span class="slot-bind">C</span><span class="slot-item">Bow</span></div>
-        <div class="slot" id="s8"><span class="slot-bind">X</span><span class="slot-item">Pots</span></div>
-        <div class="slot" id="s9"><span class="slot-bind">Z</span><span class="slot-item">Food</span></div>
+    <div id="hud-row">
+        <!-- Hotbar -->
+        <div id="hotbar" class="mc-grid">
+            <div class="slot active-slot" id="s1" data-slot="1"><span class="slot-bind">CAPS</span><span class="slot-item">Sword</span></div>
+            <div class="slot" id="s2" data-slot="2"><span class="slot-bind">2</span><span class="slot-item">Pearls</span></div>
+            <div class="slot" id="s3" data-slot="3"><span class="slot-bind">3</span><span class="slot-item">Glowstone</span></div>
+            <div class="slot" id="s4" data-slot="4"><span class="slot-bind">4</span><span class="slot-item">Gapples</span></div>
+            <div class="slot" id="s5" data-slot="5"><span class="slot-bind">R</span><span class="slot-item">Anchors</span></div>
+            <div class="slot" id="s6" data-slot="6"><span class="slot-bind">ALT</span><span class="slot-item">Totem</span></div>
+            <div class="slot" id="s7" data-slot="7"><span class="slot-bind">X</span><span class="slot-item">Obsidian</span></div>
+            <div class="slot" id="s8" data-slot="8"><span class="slot-bind">C</span><span class="slot-item">Crystals</span></div>
+            <div class="slot" id="s9" data-slot="9"><span class="slot-bind">V</span><span class="slot-item">Pickaxe</span></div>
+        </div>
+
+        <!-- Offhand Slot HUD Component -->
+        <div id="offhand-container">
+            <span style="font-size: 10px; color:#888; margin-bottom:2px;">OFFHAND</span>
+            <div class="slot" id="hud-offhand" style="border: 3px solid #ff5555;"><span class="slot-bind">Q</span><span class="slot-item">Empty</span></div>
+        </div>
+    </div>
+
+    <!-- Moveable / Openable Inventory UI -->
+    <div id="inventory-screen">
+        <div class="inv-title">Inventory (Press E to Close)</div>
+        <div id="main-inventory" class="mc-grid">
+            <!-- 27 standard inventory slots dynamically generated by JS -->
+        </div>
+        <div class="inv-title">Hotbar</div>
+        <div id="inv-hotbar-mirror" class="mc-grid" style="grid-template-columns: repeat(9, 1fr);">
+            <!-- Mirror hotbar slots for inventory drag-and-drop -->
+        </div>
     </div>
 
     <div id="stats">Score: <span id="score-val" class="score">0</span> | Streak: <span id="streak-val" class="score">0</span></div>
+    <div class="hint">Press [E] to open/close inventory. Drag items to rearrange them!</div>
 </div>
 
 <script>
-    // Customize your key mappings here! 
-    // Format: 'Your_Physical_Keyboard_Key': { slotId: 'Visual_Slot_ID', name: 'Item_Name' }
-    const keyBinds = {
-        '1': { id: 's1', name: 'SWORD' },
-        '2': { id: 's2', name: 'GAPPLE' },
-        '3': { id: 's3', name: 'PICKAXE' },
-        '4': { id: 's4', name: 'BLOCKS' },
-        'r': { id: 's5', name: 'WATER BUCKET' },
-        'f': { id: 's6', name: 'ENDER PEARL' },
-        'c': { id: 's7', name: 'BOW' },
-        'x': { id: 's8', name: 'POTIONS' },
-        'z': { id: 's9', name: 'FOOD' }
+    // Exact requested item layout mapped to your actual hardware keys
+    const hotbarConfig = {
+        'capslock': { id: 's1', name: 'NETHERITE SWORD', defaultItem: 'Sword' },
+        '2':         { id: 's2', name: 'ENDER PEARLS', defaultItem: 'Pearls' },
+        '3':         { id: 's3', name: 'GLOWSTONE', defaultItem: 'Glowstone' },
+        '4':         { id: 's4', name: 'GOLDEN APPLES', defaultItem: 'Gapples' },
+        'r':         { id: 's5', name: 'RESPAWN ANCHORS', defaultItem: 'Anchors' },
+        'alt':       { id: 's6', name: 'TOTEM', defaultItem: 'Totem' },
+        'x':         { id: 's7', name: 'OBSIDIAN', defaultItem: 'Obsidian' },
+        'c':         { id: 's8', name: 'CRYSTALS', defaultItem: 'Crystals' },
+        'v':         { id: 's9', name: 'PICKAXE', defaultItem: 'Pickaxe' }
     };
 
-    const items = Object.values(keyBinds);
-    let currentTarget = items[0];
+    let offhandItem = "Empty";
     let score = 0;
     let streak = 0;
+    let isInventoryOpen = false;
+    let currentTarget = null;
+    let draggedElement = null;
 
+    // Build the inventory screen slots dynamically
+    const mainInv = document.getElementById('main-inventory');
+    const mirrorHotbar = document.getElementById('inv-hotbar-mirror');
+    
+    // Fill up the upper inventory with extra PvP items to move around
+    const extraItems = ['Crystals', 'Anchors', 'Glowstone', 'Totem', 'Obsidian', 'Potions', 'Sword', 'Pearls', 'Gapples'];
+    
+    for (let i = 0; i < 27; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.setAttribute('draggable', 'true');
+        slot.dataset.type = 'storage';
+        slot.dataset.index = i;
+        
+        // Scatter some spare items into the inventory box
+        if (i < extraItems.length) {
+            slot.innerHTML = `<span class="slot-item">${extraItems[i]}</span>`;
+        } else {
+            slot.innerHTML = `<span class="slot-item">Empty</span>`;
+        }
+        mainInv.appendChild(slot);
+    }
+
+    // Generate Mirror slots inside the Inventory screen for total customizability
+    Object.keys(hotbarConfig).forEach((key, idx) => {
+        const conf = hotbarConfig[key];
+        const mirrorSlot = document.createElement('div');
+        mirrorSlot.className = 'slot';
+        mirrorSlot.setAttribute('draggable', 'true');
+        mirrorSlot.dataset.type = 'hotbar';
+        mirrorSlot.dataset.key = key;
+        mirrorSlot.innerHTML = `<span class="slot-bind">${conf.id.replace('s','')}</span><span class="slot-item">${conf.defaultItem}</span>`;
+        mirrorHotbar.appendChild(mirrorSlot);
+    });
+
+    // Handle Prompts specific to Crystal PvP
+    const pvpPool = ['NETHERITE SWORD', 'ENDER PEARLS', 'GLOWSTONE', 'GOLDEN APPLES', 'RESPAWN ANCHORS', 'TOTEM', 'OBSIDIAN', 'CRYSTALS', 'PICKAXE', 'OFFHAND TOTEM'];
+    
     function nextPrompt() {
-        // Pick a random hotbar item that isn't the current one
         let next;
         do {
-            next = items[Math.floor(Math.random() * items.length)];
+            next = pvpPool[Math.floor(Math.random() * pvpPool.length)];
         } while (next === currentTarget);
         
         currentTarget = next;
-        document.getElementById('target-item').innerText = currentTarget.name;
-    }
-
-    window.addEventListener('keydown', function(e) {
-        const keyPressed = e.key.toLowerCase();
+        document.getElementById('target-item').innerText = currentTarget;
         
-        // Block normal browser functions for standard keys so your screen doesn't scroll
-        if(['r', 'f', 'c', 'x', 'z', '1', '2', '3', '4'].includes(keyPressed)) {
-            e.preventDefault();
-        }
-
-        if (keyBinds[keyPressed]) {
-            // Remove previous active slot border
-            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active-slot'));
-            
-            // Highlight the slot the user just pressed
-            document.getElementById(keyBinds[keyPressed].id).classList.add('active-slot');
-
-            // Check if it matches the target
-            if (keyBinds[keyPressed].name === currentTarget.name) {
-                score++;
-                streak++;
-                document.getElementById('score-val').innerText = score;
-                document.getElementById('streak-val').innerText = streak;
-                nextPrompt();
-            } else {
-                streak = 0;
-                document.getElementById('streak-val').innerText = streak;
-            }
-        }
-    });
-
-    // Start game
-    nextPrompt();
-</script>
-</body>
-</html>
+        if(currentTarget === 'OFFHAND TOTEM') {
