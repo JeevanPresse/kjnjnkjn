@@ -118,11 +118,43 @@
         #stats { margin-top: 20px; font-size: 15px; color: #aaa; }
         .score { color: #55ff55; font-weight: bold; }
         .hint { font-size: 12px; color: #777; margin-top: 5px; }
+
+        /* Lock Interface Start Overlay */
+        #start-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 6px;
+        }
+        #start-btn {
+            background: #55ff55;
+            color: #111;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: monospace;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(85,255,85,0.4);
+        }
+        #start-btn:hover { background: #33cc33; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <!-- Click activation wall to bypass browser hardware restrictions -->
+    <div id="start-overlay">
+        <h3 style="color: #ffaa00; margin-bottom: 20px;">CRYSTAL PVP TRAINER</h3>
+        <button id="start-btn" onclick="startGame()">START PRACTICE</button>
+    </div>
+
     <h2>Crystal PvP Practice</h2>
     <div id="prompt-box">SWITCH TO: <span id="target-item" style="color: #ff55ff;">NETHERITE SWORD</span></div>
     
@@ -153,11 +185,10 @@
     </div>
 
     <div id="stats">Score: <span id="score-val" class="score">0</span> | Streak: <span id="streak-val" class="score">0</span></div>
-    <div class="hint">Click inside this window first! Press [E] to toggle inventory. Drag items to rearrange!</div>
+    <div class="hint">Press [E] to toggle inventory. Drag items to rearrange them!</div>
 </div>
 
 <script>
-    // Converted mapping directly to hardware key event code locations
     const hotbarConfig = {
         'CapsLock':  { id: 's1', name: 'NETHERITE SWORD', defaultItem: 'Sword' },
         'Digit2':    { id: 's2', name: 'ENDER PEARLS', defaultItem: 'Pearls' },
@@ -180,7 +211,6 @@
 
     const mainInv = document.getElementById('main-inventory');
     const mirrorHotbar = document.getElementById('inv-hotbar-mirror');
-    
     const extraItems = ['Crystals', 'Anchors', 'Glowstone', 'Totem', 'Obsidian', 'Potions', 'Sword', 'Pearls', 'Gapples'];
     
     for (let i = 0; i < 27; i++) {
@@ -189,17 +219,12 @@
         slot.setAttribute('draggable', 'true');
         slot.dataset.type = 'storage';
         slot.dataset.index = i;
-        
-        if (i < extraItems.length) {
-            slot.innerHTML = `<span class="slot-item">${extraItems[i]}</span>`;
-        } else {
-            slot.innerHTML = `<span class="slot-item">Empty</span>`;
-        }
+        slot.innerHTML = `<span class="slot-item">${i < extraItems.length ? extraItems[i] : 'Empty'}</span>`;
         mainInv.appendChild(slot);
     }
 
     Object.keys(hotbarConfig).forEach((code) => {
-        if(code === 'AltRight') return; // skip duplicate entry for mirror layout
+        if(code === 'AltRight') return;
         const conf = hotbarConfig[code];
         const mirrorSlot = document.createElement('div');
         mirrorSlot.className = 'slot';
@@ -217,25 +242,3 @@
         do {
             next = pvpPool[Math.floor(Math.random() * pvpPool.length)];
         } while (next === currentTarget);
-        
-        currentTarget = next;
-        document.getElementById('target-item').innerText = currentTarget;
-        
-        if(currentTarget === 'OFFHAND TOTEM') {
-            document.getElementById('target-item').style.color = "#55ffff";
-        } else {
-            document.getElementById('target-item').style.color = "#ff55ff";
-        }
-    }
-
-    window.addEventListener('keydown', function(e) {
-        let keyCode = e.code; 
-        
-        // Anti-Intercept: Force the web app to swallow dangerous school browser shortcuts
-        if(['KeyR','KeyC','KeyX','KeyV','KeyQ','KeyE','Digit1','Digit2','Digit3','Digit4','AltLeft','AltRight','CapsLock'].includes(keyCode)) {
-            e.preventDefault();
-        }
-
-        // Open inventory loop (E Key)
-        if (keyCode === 'KeyE') {
-            isInventoryOpen = !isInventoryOpen;
