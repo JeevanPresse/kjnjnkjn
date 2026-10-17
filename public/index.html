@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Crystal PvP Bind & Inventory Trainer</title>
+    <title>Crystal PvP Trainer</title>
     <style>
         body {
             background-color: #141414;
@@ -169,7 +169,7 @@
         </div>
     </div>
     <div id="inventory-screen">
-        <div class="inv-title">Inventory (Press E to Close)</div>
+        <div class="inv-title">Inventory (Press E to Close) | Hover + Q to Offhand</div>
         <div id="main-inventory" class="mc-grid"></div>
         <div class="inv-title">Hotbar</div>
         <div id="inv-hotbar-mirror" class="mc-grid" style="grid-template-columns: repeat(9, 1fr);"></div>
@@ -196,18 +196,24 @@
     let isInventoryOpen = false;
     let currentTarget = null;
     let draggedElement = null;
+    let hoveredSlot = null; // Track current hovered slot block for hotkey mapping
 
     const mainInv = document.getElementById('main-inventory');
     const mirrorHotbar = document.getElementById('inv-hotbar-mirror');
-    const extraItems = ['Crystals', 'Anchors', 'Glowstone', 'Totem', 'Obsidian', 'Potions', 'Sword', 'Pearls', 'Gapples'];
     
+    // Fill full inventory grid with custom PvP junk mixed heavily with Totems
+    const extraItems = ['Totem', 'Crystals', 'Totem', 'Anchors', 'Glowstone', 'Totem', 'Obsidian', 'Potions', 'Totem', 'Pearls', 'Totem'];
+    
+    // Fixed: Loop from index 0 to exactly 26 to render all 27 containers cleanly
     for (let i = 0; i < 27; i++) {
         const slot = document.createElement('div');
         slot.className = 'slot';
         slot.setAttribute('draggable', 'true');
         slot.dataset.type = 'storage';
         slot.dataset.index = i;
-        slot.innerHTML = `<span class="slot-item">${i < extraItems.length ? extraItems[i] : 'Empty'}</span>`;
+        
+        let itemLabel = extraItems[i % extraItems.length];
+        slot.innerHTML = `<span class="slot-item">${itemLabel}</span>`;
         mainInv.appendChild(slot);
     }
 
@@ -222,7 +228,8 @@
         mirrorHotbar.appendChild(mirrorSlot);
     });
 
-    const pvpPool = ['NETHERITE SWORD', 'ENDER PEARLS', 'GLOWSTONE', 'GOLDEN APPLES', 'RESPAWN ANCHORS', 'TOTEM', 'OBSIDIAN', 'CRYSTALS', 'PICKAXE', 'OFFHAND TOTEM'];
+    // Removed the Offhand Totem loop restriction entirely
+    const pvpPool = ['NETHERITE SWORD', 'ENDER PEARLS', 'GLOWSTONE', 'GOLDEN APPLES', 'RESPAWN ANCHORS', 'TOTEM', 'OBSIDIAN', 'CRYSTALS', 'PICKAXE'];
     
     function nextPrompt() {
         let next;
@@ -231,13 +238,22 @@
         } while (next === currentTarget);
         currentTarget = next;
         document.getElementById('target-item').innerText = currentTarget;
-        document.getElementById('target-item').style.color = currentTarget === 'OFFHAND TOTEM' ? "#55ffff" : "#ff55ff";
     }
 
     function startGame() {
         document.getElementById('start-overlay').style.display = 'none';
         nextPrompt();
     }
+
+    // Monitor current hover targets for inventory offhand binds
+    document.addEventListener('mouseover', function(e) {
+        let slot = e.target.closest('.slot');
+        if (slot) hoveredSlot = slot;
+    });
+    document.addEventListener('mouseout', function(e) {
+        let slot = e.target.closest('.slot');
+        if (slot && hoveredSlot === slot) hoveredSlot = null;
+    });
 
     window.addEventListener('keydown', function(e) {
         let keyName = e.key.toLowerCase(); 
@@ -252,24 +268,35 @@
             return;
         }
 
-        if (isInventoryOpen) return;
-
+        // Expanded: Q key offhand management operates inside or outside inventory
         if (keyName === 'q') {
-            const activeSlotEl = document.querySelector('#hotbar .active-slot');
-            const activeItemText = activeSlotEl.querySelector('.slot-item').innerText;
-            
-            let oldOffhand = offhandItem;
-            offhandItem = activeItemText;
-            activeSlotEl.querySelector('.slot-item').innerText = oldOffhand;
-            document.querySelector('#hud-offhand .slot-item').innerText = offhandItem;
-
-            if (currentTarget === 'OFFHAND TOTEM' && offhandItem.toUpperCase() === 'TOTEM') {
-                score++; streak++;
-                nextPrompt();
+            if (isInventoryOpen && hoveredSlot) {
+                // If inventory panel is open, swap hovered item straight with offhand hud slot
+                let targetText = hoveredSlot.querySelector('.slot-item').innerText;
+                let oldOffhand = offhandItem;
+                offhandItem = targetText;
+                hoveredSlot.querySelector('.slot-item').innerText = oldOffhand;
+                document.querySelector('#hud-offhand .slot-item').innerText = offhandItem;
+                
+                // If moving item inside hotbar mirror, update base system configurations
+                if (hoveredSlot.dataset.type === 'hotbar') {
+                    hotbarConfig[hoveredSlot.dataset.key].defaultItem = oldOffhand;
+                    document.getElementById(hotbarConfig[hoveredSlot.dataset.key].id).querySelector('.slot-item').innerText = oldOffhand;
+                }
+            } else if (!isInventoryOpen) {
+                // Normal HUD swap routine outside container menus
+                const activeSlotEl = document.querySelector('#hotbar .active-slot');
+                const activeItemText = activeSlotEl.querySelector('.slot-item').innerText;
+                
+                let oldOffhand = offhandItem;
+                offhandItem = activeItemText;
+                activeSlotEl.querySelector('.slot-item').innerText = oldOffhand;
+                document.querySelector('#hud-offhand .slot-item').innerText = offhandItem;
             }
-            updateStats();
             return;
         }
+
+        if (isInventoryOpen) return;
 
         if (hotbarConfig[keyName]) {
             document.querySelectorAll('#hotbar .slot').forEach(s => s.classList.remove('active-slot'));
@@ -280,7 +307,11 @@
 
             const currentItemInSlot = hudSlot.querySelector('.slot-item').innerText.toUpperCase();
 
-            if (currentTarget !== 'OFFHAND TOTEM' && currentTarget.includes(currentItemInSlot) && currentItemInSlot !== "EMPTY") {
+            // FIXED: Direct text evaluations prevent double-word items like gapples from failing matching scripts
+            let normalizedTarget = currentTarget.replace('NETHERITE ', '').replace('ENDER ', '').replace('GOLDEN ', '').replace('RESPAWN ', '');
+            let normalizedCurrent = currentItemInSlot.replace('SWORD', 'SWORD').replace('PEARLS', 'PEARLS').replace('GAPPLES', 'APPLES').replace('ANCHORS', 'ANCHORS');
+
+            if (normalizedTarget === normalizedCurrent && currentItemInSlot !== "EMPTY") {
                 score++; streak++;
                 nextPrompt();
             } else {
