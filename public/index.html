@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 95vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+        #game-container {
+            text-align: center;
+            background: #2c2c2c;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.5);
+            border: 4px solid #4a4a4a;
+        }
+        h2 { color: #55ff55; margin-top: 0; text-transform: uppercase; }
+        #prompt-box {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            background: #111;
+            border-radius: 5px;
+            border-left: 5px solid #ff5555;
+            min-height: 35px;
+        }
+        #hotbar {
+            display: flex;
+            gap: 4px;
+            background: #8f8f8f;
+            padding: 4px;
+            border: 4px solid #3c3c3c;
+            margin-top: 25px;
+        }
+        .slot {
+            width: 50px;
+            height: 50px;
+            background: #8b8b8b;
+            border: 3px solid #373737;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+            position: relative;
+        }
+        .slot-bind { color: #ffaa00; font-size: 12px; }
+        .slot-item { font-size: 10px; color: #fff; text-align: center; margin-bottom: 5px;}
+        .active-slot {
+            border: 3px solid #ffffff !important;
+            background: #afafaf;
+        }
+        #stats {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #aaa;
+        }
+        .score { color: #55ffff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h2>Minecraft Bind Practice</h2>
+    <p style="color: #aaa; font-size: 13px;">Click inside this window first, then react to the prompt!</p>
+    
+    <div id="prompt-box">Press Key for: <span id="target-item" style="color: #ff5555;">SWORD</span></div>
+    
+    <div id="hotbar">
+        <!-- 9 standard Minecraft slots with common custom binds -->
+        <div class="slot active-slot" id="s1"><span class="slot-bind">1</span><span class="slot-item">Sword</span></div>
+        <div class="slot" id="s2"><span class="slot-bind">2</span><span class="slot-item">Gapple</span></div>
+        <div class="slot" id="s3"><span class="slot-bind">3</span><span class="slot-item">Pick</span></div>
+        <div class="slot" id="s4"><span class="slot-bind">4</span><span class="slot-item">Blocks</span></div>
+        <div class="slot" id="s5"><span class="slot-bind">R</span><span class="slot-item">Bucket</span></div>
+        <div class="slot" id="s6"><span class="slot-bind">F</span><span class="slot-item">Pearl</span></div>
+        <div class="slot" id="s7"><span class="slot-bind">C</span><span class="slot-item">Bow</span></div>
+        <div class="slot" id="s8"><span class="slot-bind">X</span><span class="slot-item">Pots</span></div>
+        <div class="slot" id="s9"><span class="slot-bind">Z</span><span class="slot-item">Food</span></div>
+    </div>
+
+    <div id="stats">Score: <span id="score-val" class="score">0</span> | Streak: <span id="streak-val" class="score">0</span></div>
+</div>
+
+<script>
+    // Customize your key mappings here! 
+    // Format: 'Your_Physical_Keyboard_Key': { slotId: 'Visual_Slot_ID', name: 'Item_Name' }
+    const keyBinds = {
+        '1': { id: 's1', name: 'SWORD' },
+        '2': { id: 's2', name: 'GAPPLE' },
+        '3': { id: 's3', name: 'PICKAXE' },
+        '4': { id: 's4', name: 'BLOCKS' },
+        'r': { id: 's5', name: 'WATER BUCKET' },
+        'f': { id: 's6', name: 'ENDER PEARL' },
+        'c': { id: 's7', name: 'BOW' },
+        'x': { id: 's8', name: 'POTIONS' },
+        'z': { id: 's9', name: 'FOOD' }
+    };
+
+    const items = Object.values(keyBinds);
+    let currentTarget = items[0];
+    let score = 0;
+    let streak = 0;
+
+    function nextPrompt() {
+        // Pick a random hotbar item that isn't the current one
+        let next;
+        do {
+            next = items[Math.floor(Math.random() * items.length)];
+        } while (next === currentTarget);
+        
+        currentTarget = next;
+        document.getElementById('target-item').innerText = currentTarget.name;
+    }
+
+    window.addEventListener('keydown', function(e) {
+        const keyPressed = e.key.toLowerCase();
+        
+        // Block normal browser functions for standard keys so your screen doesn't scroll
+        if(['r', 'f', 'c', 'x', 'z', '1', '2', '3', '4'].includes(keyPressed)) {
+            e.preventDefault();
+        }
+
+        if (keyBinds[keyPressed]) {
+            // Remove previous active slot border
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active-slot'));
+            
+            // Highlight the slot the user just pressed
+            document.getElementById(keyBinds[keyPressed].id).classList.add('active-slot');
+
+            // Check if it matches the target
+            if (keyBinds[keyPressed].name === currentTarget.name) {
+                score++;
+                streak++;
+                document.getElementById('score-val').innerText = score;
+                document.getElementById('streak-val').innerText = streak;
+                nextPrompt();
+            } else {
+                streak = 0;
+                document.getElementById('streak-val').innerText = streak;
+            }
+        }
+    });
+
+    // Start game
+    nextPrompt();
+</script>
+</body>
+</html>
