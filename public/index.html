@@ -1,348 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Crystal PvP Trainer</title>
-    <style>
-        body {
-            background-color: #141414;
-            color: #ffffff;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 98vh;
-            margin: 0;
-            overflow: hidden;
-            user-select: none;
-        }
-        #game-container {
-            text-align: center;
-            background: #222222;
-            padding: 25px;
-            border-radius: 6px;
-            box-shadow: 0px 10px 25px rgba(0,0,0,0.7);
-            border: 4px solid #3c3c3c;
-            position: relative;
-            width: 580px;
-        }
-        h2 { color: #ff55ff; margin: 0 0 10px 0; text-transform: uppercase; font-size: 22px; letter-spacing: 1px; }
-        #prompt-box {
-            font-size: 28px;
-            font-weight: bold;
-            margin: 15px 0;
-            padding: 12px;
-            background: #0a0a0a;
-            border-radius: 4px;
-            border-left: 5px solid #ffaa00;
-            min-height: 28px;
-        }
-        .mc-grid {
-            display: grid;
-            background: #8f8f8f;
-            padding: 4px;
-            border-top: 4px solid #fff;
-            border-left: 4px solid #fff;
-            border-bottom: 4px solid #373737;
-            border-right: 4px solid #373737;
-            gap: 4px;
-            user-select: none;
-        }
-        #inventory-screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            background: #c6c6c6;
-            padding: 15px;
-            border: 4px solid #3c3c3c;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-        }
-        .inv-title { color: #404040; font-weight: bold; margin-bottom: 8px; font-size: 14px; text-align: left; width: 100%; }
-        #main-inventory { grid-template-columns: repeat(9, 1fr); margin-bottom: 15px; }
-        #hud-row {
-            display: flex;
-            align-items: flex-end;
-            gap: 20px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-        #hotbar { grid-template-columns: repeat(9, 1fr); }
-        .slot {
-            width: 48px;
-            height: 48px;
-            background: #8b8b8b;
-            border-top: 3px solid #373737;
-            border-left: 3px solid #373737;
-            border-bottom: 3px solid #fff;
-            border-right: 3px solid #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            cursor: pointer;
-        }
-        .slot:hover { background: #9c9c9c; }
-        .active-slot {
-            border: 3px solid #ffffff !important;
-            background: #afafaf;
-            box-shadow: inset 0 0 10px rgba(255,255,255,0.5);
-        }
-        .slot-bind {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            color: #dddddd;
-            font-size: 10px;
-            font-family: sans-serif;
-            text-shadow: 1px 1px 1px #000;
-        }
-        .slot-item {
-            font-size: 10px;
-            color: #ffffff;
-            font-weight: bold;
-            text-align: center;
-            text-shadow: 1px 1px 2px #000;
-            word-break: break-word;
-            line-height: 11px;
-            padding: 0 2px;
-            pointer-events: none;
-        }
-        #offhand-container { display: flex; flex-direction: column; align-items: center; }
-        #stats { margin-top: 20px; font-size: 15px; color: #aaa; }
-        .score { color: #55ff55; font-weight: bold; }
-        .hint { font-size: 12px; color: #777; margin-top: 5px; }
-        #start-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 10, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            border-radius: 6px;
-        }
-        #start-btn {
-            background: #55ff55;
-            color: #111;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            font-family: monospace;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        #start-btn:hover { background: #33cc33; }
-    </style>
-</head>
-<body>
-<div id="game-container">
-    <div id="start-overlay">
-        <h3 style="color: #ffaa00; margin-bottom: 20px;">CRYSTAL PVP TRAINER</h3>
-        <button id="start-btn" onclick="startGame()">START PRACTICE</button>
+<!-- Add this section inside your HTML body where you want the browser tool to appear -->
+<div id="browser-tool">
+    <div class="browser-bar">
+        <input type="text" id="url-input" placeholder="Enter a secure URL (e.g., https://example.com)...">
+        <button onclick="loadWebpage()">Go</button>
+        <button onclick="toggleBrowserFullscreen()">Full Screen</button>
     </div>
-    <h2>Crystal PvP Practice</h2>
-    <div id="prompt-box">SWITCH TO SLOT: <span id="target-item" style="color: #ffaa00;">1</span></div>
-    <div id="hud-row">
-        <div id="hotbar" class="mc-grid">
-            <div class="slot active-slot" id="s1" data-slot-num="1"><span class="slot-bind">CAPS</span><span class="slot-item">Sword</span></div>
-            <div class="slot" id="s2" data-slot-num="2"><span class="slot-bind">2</span><span class="slot-item">Pearls</span></div>
-            <div class="slot" id="s3" data-slot-num="3"><span class="slot-bind">3</span><span class="slot-item">Glowstone</span></div>
-            <div class="slot" id="s4" data-slot="4"><span class="slot-bind">4</span><span class="slot-item">Gapples</span></div>
-            <div class="slot" id="s5" data-slot="5"><span class="slot-bind">R</span><span class="slot-item">Anchors</span></div>
-            <div class="slot" id="s6" data-slot="6"><span class="slot-bind">ALT</span><span class="slot-item">Totem</span></div>
-            <div class="slot" id="s7" data-slot="7"><span class="slot-bind">X</span><span class="slot-item">Obsidian</span></div>
-            <div class="slot" id="s8" data-slot="8"><span class="slot-bind">C</span><span class="slot-item">Crystals</span></div>
-            <div class="slot" id="s9" data-slot="9"><span class="slot-bind">V</span><span class="slot-item">Pickaxe</span></div>
-        </div>
-        <div id="offhand-container">
-            <span style="font-size: 10px; color:#888; margin-bottom:2px;">OFFHAND</span>
-            <div class="slot" id="hud-offhand" style="border: 3px solid #ff5555;"><span class="slot-bind">Q</span><span class="slot-item">Empty</span></div>
-        </div>
-    </div>
-    <div id="inventory-screen">
-        <div class="inv-title">Inventory (Press E to Close) | Hover + Q to Offhand</div>
-        <div id="main-inventory" class="mc-grid"></div>
-        <div class="inv-title">Hotbar</div>
-        <div id="inv-hotbar-mirror" class="mc-grid" style="grid-template-columns: repeat(9, 1fr);"></div>
-    </div>
-    <div id="stats">Score: <span id="score-val" class="score">0</span> | Streak: <span id="streak-val" class="score">0</span></div>
-    <div class="hint">Press [E] to toggle inventory. Drag items to rearrange them!</div>
+    <!-- The iframe serves as the embedded browsing window -->
+    <iframe id="site-frame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
 </div>
+
+<style>
+/* CSS Styling for the integrated container */
+#browser-tool {
+    margin-top: 20px;
+    width: 580px;
+    background: #222222;
+    padding: 15px;
+    border-radius: 6px;
+    border: 4px solid #3c3c3c;
+    box-sizing: border-box;
+}
+.browser-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+#url-input {
+    flex-grow: 1;
+    background: #0a0a0a;
+    border: 1px solid #3c3c3c;
+    color: #fff;
+    padding: 5px 10px;
+    font-family: monospace;
+}
+#browser-tool button {
+    background: #ff55ff;
+    color: #000;
+    border: none;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+#site-frame {
+    width: 100%;
+    height: 300px;
+    border: 2px solid #0a0a0a;
+    background: #ffffff;
+}
+</style>
+
 <script>
-    // Universal character keys mapped to slot number tags
-    const hotbarConfig = {
-        'capslock': { id: 's1', slotNum: '1', defaultItem: 'Sword' },
-        '2':        { id: 's2', slotNum: '2', defaultItem: 'Pearls' },
-        '3':        { id: 's3', slotNum: '3', defaultItem: 'Glowstone' },
-        '4':        { id: 's4', slotNum: '4', defaultItem: 'Gapples' },
-        'r':        { id: 's5', slotNum: '5', defaultItem: 'Anchors' },
-        'alt':      { id: 's6', slotNum: '6', defaultItem: 'Totem' },
-        'x':        { id: 's7', slotNum: '7', defaultItem: 'Obsidian' },
-        'c':        { id: 's8', slotNum: '8', defaultItem: 'Crystals' },
-        'v':        { id: 's9', slotNum: '9', defaultItem: 'Pickaxe' }
-    };
-
-    let offhandItem = "Empty";
-    let score = 0;
-    let streak = 0;
-    let isInventoryOpen = false;
-    let currentTarget = null;
-    let draggedElement = null;
-    let hoveredSlot = null;
-
-    const mainInv = document.getElementById('main-inventory');
-    const mirrorHotbar = document.getElementById('inv-hotbar-mirror');
-    const extraItems = ['Totem', 'Crystals', 'Totem', 'Anchors', 'Glowstone', 'Totem', 'Obsidian', 'Potions', 'Totem', 'Pearls', 'Totem'];
+// JavaScript Logic for managing the Frame content and Fullscreen states
+function loadWebpage() {
+    const input = document.getElementById('url-input').value;
+    const frame = document.getElementById('site-frame');
     
-    for (let i = 0; i < 27; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'slot';
-        slot.setAttribute('draggable', 'true');
-        slot.dataset.type = 'storage';
-        slot.dataset.index = i;
-        
-        let itemLabel = extraItems[i % extraItems.length];
-        slot.innerHTML = `<span class="slot-item">${itemLabel}</span>`;
-        mainInv.appendChild(slot);
+    // Ensure the input contains a valid protocol schema
+    if (input.startsWith('http://') || input.startsWith('https://')) {
+        frame.src = input;
+    } else {
+        frame.src = 'https://' + input;
     }
+}
 
-    Object.keys(hotbarConfig).forEach((key) => {
-        const conf = hotbarConfig[key];
-        const mirrorSlot = document.createElement('div');
-        mirrorSlot.className = 'slot';
-        mirrorSlot.setAttribute('draggable', 'true');
-        mirrorSlot.dataset.type = 'hotbar';
-        mirrorSlot.dataset.key = key;
-        mirrorSlot.innerHTML = `<span class="slot-bind">${conf.slotNum}</span><span class="slot-item">${conf.defaultItem}</span>`;
-        mirrorHotbar.appendChild(mirrorSlot);
-    });
-
-    // Pure hotbar numeric targets array
-    const slotPool = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+function toggleBrowserFullscreen() {
+    const frame = document.getElementById('site-frame');
     
-    function nextPrompt() {
-        let next;
-        do {
-            next = slotPool[Math.floor(Math.random() * slotPool.length)];
-        } while (next === currentTarget);
-        currentTarget = next;
-        document.getElementById('target-item').innerText = currentTarget;
+    // Utilize the standard Fullscreen API
+    if (!document.fullscreenElement) {
+        if (frame.requestFullscreen) {
+            frame.requestFullscreen();
+        } else if (frame.webkitRequestFullscreen) { /* Safari */
+            frame.webkitRequestFullscreen();
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
     }
-
-    function startGame() {
-        document.getElementById('start-overlay').style.display = 'none';
-        nextPrompt();
-    }
-
-    document.addEventListener('mouseover', function(e) {
-        let slot = e.target.closest('.slot');
-        if (slot) hoveredSlot = slot;
-    });
-    document.addEventListener('mouseout', function(e) {
-        let slot = e.target.closest('.slot');
-        if (slot && hoveredSlot === slot) hoveredSlot = null;
-    });
-
-    window.addEventListener('keydown', function(e) {
-        let keyName = e.key.toLowerCase(); 
-        
-        if(['r','c','x','v','q','e','2','3','4','alt','capslock'].includes(keyName)) {
-            e.preventDefault();
-        }
-
-        if (keyName === 'e') {
-            isInventoryOpen = !isInventoryOpen;
-            document.getElementById('inventory-screen').style.display = isInventoryOpen ? 'flex' : 'none';
-            return;
-        }
-
-        if (keyName === 'q') {
-            if (isInventoryOpen && hoveredSlot) {
-                let targetText = hoveredSlot.querySelector('.slot-item').innerText;
-                let oldOffhand = offhandItem;
-                offhandItem = targetText;
-                hoveredSlot.querySelector('.slot-item').innerText = oldOffhand;
-                document.querySelector('#hud-offhand .slot-item').innerText = offhandItem;
-                
-                if (hoveredSlot.dataset.type === 'hotbar') {
-                    hotbarConfig[hoveredSlot.dataset.key].defaultItem = oldOffhand;
-                    document.getElementById(hotbarConfig[hoveredSlot.dataset.key].id).querySelector('.slot-item').innerText = oldOffhand;
-                }
-            } else if (!isInventoryOpen) {
-                const activeSlotEl = document.querySelector('#hotbar .active-slot');
-                const activeItemText = activeSlotEl.querySelector('.slot-item').innerText;
-                
-                let oldOffhand = offhandItem;
-                offhandItem = activeItemText;
-                activeSlotEl.querySelector('.slot-item').innerText = oldOffhand;
-                document.querySelector('#hud-offhand .slot-item').innerText = offhandItem;
-            }
-            return;
-        }
-
-        if (isInventoryOpen) return;
-
-        // Number prompt tracking logic
-        if (hotbarConfig[keyName]) {
-            document.querySelectorAll('#hotbar .slot').forEach(s => s.classList.remove('active-slot'));
-            
-            const selectedConfig = hotbarConfig[keyName];
-            const hudSlot = document.getElementById(selectedConfig.id);
-            hudSlot.classList.add('active-slot');
-
-            // Directly check if pressed key matches slot number prompt target
-            if (selectedConfig.slotNum === currentTarget) {
-                score++; streak++;
-                nextPrompt();
-            } else {
-                streak = 0; 
-            }
-            updateStats();
-        }
-    });
-
-    function updateStats() {
-        document.getElementById('score-val').innerText = score;
-        document.getElementById('streak-val').innerText = streak;
-    }
-
-    document.addEventListener('dragstart', function(e) {
-        if (e.target.classList.contains('slot')) {
-            draggedElement = e.target;
-            e.dataTransfer.setData('text/plain', e.target.innerHTML);
-        }
-    });
-
-    document.addEventListener('dragover', function(e) { e.preventDefault(); });
-
-    document.addEventListener('drop', function(e) {
-        e.preventDefault();
-        const dropTarget = e.target.closest('.slot');
-        if (dropTarget && draggedElement && dropTarget !== draggedElement) {
-            let draggedItemText = draggedElement.querySelector('.slot-item')?.innerText || "Empty";
-            let targetItemText = dropTarget.querySelector('.slot-item')?.innerText || "Empty";
-            
-            if(draggedElement.dataset.type === 'hotbar') {
-                hotbarConfig[draggedElement.dataset.key].defaultItem = targetItemText;
-                document.getElementById(hotbarConfig[draggedElement.dataset.key].id).querySelector('.slot-item').innerText = targetItemText;
-            }
-            if(dropTarget.dataset.type === 'hotbar') {
-                hotbarConfig[dropTarget.dataset.key].defaultItem = draggedItemText;
-                document.getElementById(hotbarConfig[dropTarget.dataset.key].id).querySelector('.slot-item').innerText = draggedItemText;
-            }
-            draggedElement.querySelector('.slot-item').innerText = targetItemText;
-            dropTarget.querySelector('.slot-item').innerText = draggedItemText;
-        }
-    });
+}
 </script>
-</body>
-</html>
